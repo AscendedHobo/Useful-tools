@@ -2,7 +2,6 @@ import tkinter as tk
 import pyautogui
 import keyboard
 import threading
-import pyperclip  # Add this import
 
 # Disable pyautogui's built-in delay
 pyautogui.PAUSE = 0.0
@@ -14,19 +13,20 @@ def type_text():
     global is_typing, stop_flag
     is_typing = True
     stop_flag = False
+    
+    # First backspace to remove the triggering # character
+    pyautogui.press('backspace')
+    
     # Get all text from the text widget
     text = text_box.get("1.0", tk.END)
     
-    # Method 1: Fast character typing
-    if use_typing_var.get():
-        for char in text:
-            if stop_flag:
-                break
+    # Filter out unwanted characters and type character by character
+    for char in text:
+        if stop_flag:
+            break
+        # Skip unwanted characters
+        if char not in ['#', '*', '-']:
             pyautogui.write(char, interval=0.0)
-    # Method 2: Clipboard paste (much faster)
-    else:
-        pyperclip.copy(text)
-        pyautogui.hotkey('ctrl', 'v')
         
     is_typing = False
 
@@ -54,11 +54,6 @@ label.pack(padx=10, pady=5)
 # Use a multi-line Text widget for larger text input
 text_box = tk.Text(root, width=60, height=20)
 text_box.pack(padx=10, pady=5)
-
-# In the GUI setup section, add a checkbox for choosing the input method
-use_typing_var = tk.BooleanVar(value=False)
-typing_checkbox = tk.Checkbutton(root, text="Use character-by-character typing", variable=use_typing_var)
-typing_checkbox.pack(padx=10, pady=5)
 
 # Start the global hotkey listener in a separate daemon thread
 listener_thread = threading.Thread(target=hotkey_listener, daemon=True)
